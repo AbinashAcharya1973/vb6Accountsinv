@@ -1,0 +1,2 @@
+02/04/2023: Added New column to stockdetails purchaseinfo
+10/12/2023: Found some issues in ItemMaster Edit, through checking needed. Stock report needs to include purchase return, sales return, damage entry

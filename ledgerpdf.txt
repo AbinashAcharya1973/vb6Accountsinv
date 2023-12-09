@@ -1,0 +1,118 @@
+On Error GoTo errtrap
+    Dim objPDF As New clsPDFCreator
+    Dim OFile As String
+    Dim dht, dwdth As Double, cname As String
+    Dim xbranch As String, tempamount As String
+    Dim lineno As Single, caddress As String, cpin As String, wX As String
+    Dim rec2 As New adodb.Recordset, rec1 As New adodb.Recordset, rec3 As New adodb.Recordset, lastreceiptdate
+
+    OFile = App.Path & "\ledger.pdf"
+    Dim attachments As New Collection
+    objPDF.Title = "Ledger Statement"
+    objPDF.PaperSize = pdfA4
+    objPDF.ScaleMode = pdfCentimeter
+    objPDF.Margin = 0
+    objPDF.Orientation = pdfPortrait
+
+    objPDF.InitPDFFile OFile
+    objPDF.LoadFont "Fnt1", "Times New Roman"
+    objPDF.LoadFont "Fnt3", "Times New Roman", pdfBold
+    objPDF.LoadFont "Fnt4", "Arial Black", pdfBold
+
+    objPDF.BeginPage
+    If rec1.State = 1 Then
+        rec1.Close
+    End If
+    rec1.Open "select * from companymaster", db, 2, 2
+    If Not rec1.EOF Then
+        cname = rec1("company")
+    End If
+    objPDF.DrawText 10.3, 28, cname, "Fnt3", 10, pdfCenter
+    objPDF.DrawText 10.3, 27.5, "LEDGER STATEMENT", "Fnt4", 14, pdfCenter
+    objPDF.DrawText 10.3, 27, Me.cboLedger.Text, "Fnt3", 8, pdfCenter
+
+    objPDF.DrawText 1, 26.1, "Date", "Fnt2", 9.75
+    objPDF.DrawText 3.5, 26.1, "Particulars", "Fnt3", 9.75
+    objPDF.DrawText 9, 26.1, "Voucher Type", "Fnt4", 9.75
+    objPDF.DrawText 12, 26.1, "Voucher No.", "Fnt5", 9.75
+    objPDF.DrawText 15, 26.1, "Dr. Amount", "Fnt6", 9.75
+    objPDF.DrawText 18, 26.1, "Cr. Amount", "Fnt7", 9.75
+    objPDF.DrawLine 0, 26, 22, 26, Stroked, 2
+    'Dim lineno As Single
+    lineno = 25.5
+    If Me.txtdatefrom.Text = "__/__/____" And Me.txtdateto.Text = "__/__/____" Then
+        If rec1.State = 1 Then
+            rec1.Close
+        End If
+        rec1.Open "select * from LedgerTran where AccId=" & Me.cboLedger.ItemData(Me.cboLedger.ListIndex) & " order by Tdate,LedgerTran.`Slno` ASC", db, 2, 2
+    Else
+        objPDF.DrawText 10.3, 26.5, "From :" & Me.txtdatefrom.Text & "   To :" & Me.txtdateto.Text, "Fnt3", 8, pdfCenter
+        temp_date1 = Split(Me.txtdatefrom.Text, "/")
+        temp_date2 = Split(Me.txtdateto.Text, "/")
+        temp_from = temp_date1(2) & "/" & temp_date1(1) & "/" & temp_date1(0)
+        temp_to = temp_date2(2) & "/" & temp_date2(1) & "/" & temp_date2(0)
+        If rec1.State = 1 Then
+            rec1.Close
+        End If
+        rec1.Open "select * from ledgertran where accid=" & Me.cboLedger.ItemData(Me.cboLedger.ListIndex) & " and tdate between '" & temp_from & "' and '" & temp_to & "' order by tdate,slno asc", db, 2, 2
+    End If
+    While Not rec1.EOF
+        If lineno <= 4 Then
+            objPDF.EndPage
+            objPDF.BeginPage
+            objPDF.DrawText 1, 27, "Date", "Fnt2", 9.75
+            objPDF.DrawText 3.5, 27, "Particulars", "Fnt3", 9.75
+            objPDF.DrawText 9, 27, "Voucher Type", "Fnt4", 9.75
+            objPDF.DrawText 12, 27, "Voucher No.", "Fnt5", 9.75
+            objPDF.DrawText 15, 27, "Dr. Amount", "Fnt6", 9.75
+            objPDF.DrawText 18, 27, "Cr. Amount", "Fnt7", 9.75
+            objPDF.DrawLine 0, 26.5, 22, 26.5, Stroked, 2
+            lineno = 26
+        End If
+        objPDF.DrawText 1, lineno, rec1("tdate"), "Fnt1", 9.75
+        objPDF.DrawText 3.5, lineno, rec1("particulars"), "Fnt1", 9.75
+        objPDF.DrawText 9, lineno, rec1("vouchertype"), "Fnt1", 9.75
+        objPDF.DrawText 13.5, lineno, rec1("voucherslno"), "Fnt1", 9.75, pdfAlignRight
+        objPDF.DrawText 17, lineno, Format(rec1("dr"), "######0.00"), "Fnt1", 9.75, pdfAlignRight
+        objPDF.DrawText 20, lineno, Format(rec1("cr"), "#######0.00"), "Fnt1", 9.75, pdfAlignRight
+        If rec1("vouchertype") = "TAX Invoice" Then
+            lineno = lineno - 0.3
+            objPDF.DrawText 9, lineno, str(DateDiff("d", rec1("tdate"), Date)) & " Days ago.", "Fnt4", 8
+        End If
+        If rec1("vouchertype") = "Receipt" Then
+            lastreceiptdate = rec1("tdate")
+        End If
+        lineno = lineno - 0.4
+        rec1.MoveNext
+    Wend
+    lastpayment = 0
+    If lastreceiptdate <> "" Then
+        lastpayment = DateDiff("d", CDate(lastreceiptdate), Date)
+    End If
+    objPDF.DrawLine 0, 4, 22, 4, Stroked, 2
+    objPDF.DrawText 1, 3.5, "Last Receipt " & str(lastpayment) & " Days Ago", "Fnt4", 8, pdfAlignLeft
+    objPDF.DrawText 10, 3.5, "Opening Balance", "Fnt3", 10, pdfAlignLeft
+    objPDF.DrawText 17, 3.5, Format(Val(Me.lbl_op_dr.Caption), "######0.00"), "Fnt3", 10, pdfAlignRight
+    objPDF.DrawText 20, 3.5, Format(Val(Me.lbl_op_cr.Caption), "#######0.00"), "Fnt3", 10, pdfAlignRight
+    objPDF.DrawText 10, 3, "Total", "Fnt3", 10, pdfAlignLeft
+    objPDF.DrawText 17, 3, Format(Val(Me.lbldr.Caption), "#######0.00"), "Fnt3", 10, pdfAlignRight
+    objPDF.DrawText 20, 3, Format(Val(Me.lblcr.Caption), "#######0.00"), "Fnt3", 10, pdfAlignRight
+    objPDF.DrawText 10, 2.5, "Closing Balance", "Fnt3", 10, pdfAlignLeft
+    objPDF.DrawText 17, 2.5, Format(Val(Me.lbldr_bal.Caption), "########0.00"), "Fnt3", 10, pdfAlignRight
+    objPDF.DrawText 20, 2.5, Format(Val(Me.lblcr_bal.Caption), "#########0.00"), "Fnt3", 10, pdfAlignRight
+    objPDF.EndPage
+
+
+    '##########################################################################
+
+    objPDF.ClosePDFFile
+    If rec1.State = 1 Then
+        rec1.Close
+    End If
+    partyemailid = ""
+    partyemailid = frminstmsg.GetEmailID("Email ID", "Instant Mail ID", partyemailid)
+
+    strFile = App.Path & "\ledger.pdf"
+    attachments.Add strFile
+    'Me.MousePointer = vbHourglass
+    'Call Shell("rundll32.exe url.dll,FileProtocolHandler " & App.Path & "\INVOICE.PDF", vbMaximizedFocus)
