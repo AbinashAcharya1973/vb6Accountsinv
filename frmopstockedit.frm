@@ -266,6 +266,6 @@ Private Sub txtBar_Change()
 End Sub
 
 Private Sub txtsearch_Change()
-    Data1.RecordSource = "select * from itemmaster where item like '" & Replace(Me.txtSearch.Text, "'", "''") & "*'"
+    Data1.RecordSource = "select * from itemmaster where item like '*" & Replace(Me.txtsearch.Text, "'", "''") & "*'"
     Data1.Refresh
 End Sub

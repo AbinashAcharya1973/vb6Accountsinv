@@ -175,6 +175,7 @@ Private Sub cmdprint_Click()
     to_dt = Split(Me.txtto.Text, "/")
     
     Set rec1 = db.OpenRecordset("SELECt * from itemmaster where producttype='" & Me.cbocategory.Text & "'")
+    'Set rec1 = db.OpenRecordset("select * from itemmaster where productcode=1059")
     RowCount = 3
     While Not rec1.EOF
         tempopstock = rec1("openingstock")

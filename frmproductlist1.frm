@@ -7,12 +7,12 @@ Begin VB.Form frmproductlist1
    ClientHeight    =   4080
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   11325
+   ClientWidth     =   10920
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   4080
-   ScaleWidth      =   11325
+   ScaleWidth      =   10920
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin MSDBGrid.DBGrid DBGrid1 
@@ -22,7 +22,7 @@ Begin VB.Form frmproductlist1
       OleObjectBlob   =   "frmproductlist1.frx":0014
       TabIndex        =   1
       Top             =   480
-      Width           =   11115
+      Width           =   10755
    End
    Begin VB.TextBox txtproductname 
       BackColor       =   &H00FFFFFF&
@@ -40,7 +40,7 @@ Begin VB.Form frmproductlist1
       Left            =   1440
       TabIndex        =   0
       Top             =   120
-      Width           =   9795
+      Width           =   9375
    End
    Begin VB.Data Data1 
       Caption         =   "Data1"
@@ -182,11 +182,14 @@ Private Sub DBGrid1_KeyDown(KeyCode As Integer, Shift As Integer)
             frmdamageentry.txtpack.SetFocus
         End If
     End If
+    
 End Sub
 
 Private Sub DBGrid2_Click()
 
 End Sub
+
+
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
 On Error GoTo errtrap
